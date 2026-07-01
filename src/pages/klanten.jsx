@@ -7,34 +7,23 @@ function Klanten() {
     return savedCustomers ? JSON.parse(savedCustomers) : customersData;
   });
 
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    city: "",
-  });
-
+  const [form, setForm] = useState({ name: "", phone: "", email: "", city: "" });
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [noteText, setNoteText] = useState("");
+  const [projectTitle, setProjectTitle] = useState("");
 
   useEffect(() => {
     localStorage.setItem("hf-customers", JSON.stringify(customers));
   }, [customers]);
 
   function handleChange(event) {
-    setForm({
-      ...form,
-      [event.target.name]: event.target.value,
-    });
+    setForm({ ...form, [event.target.name]: event.target.value });
   }
 
   function resetForm() {
-    setForm({
-      name: "",
-      phone: "",
-      email: "",
-      city: "",
-    });
+    setForm({ name: "", phone: "", email: "", city: "" });
     setEditingId(null);
   }
 
@@ -42,11 +31,11 @@ function Klanten() {
     if (!form.name.trim()) return;
 
     if (editingId) {
-      setCustomers(
-        customers.map((customer) =>
-          customer.id === editingId ? { ...customer, ...form } : customer
-        )
+      const updatedCustomers = customers.map((customer) =>
+        customer.id === editingId ? { ...customer, ...form } : customer
       );
+      setCustomers(updatedCustomers);
+      setSelectedCustomer(updatedCustomers.find((c) => c.id === editingId));
       resetForm();
       return;
     }
@@ -58,9 +47,12 @@ function Klanten() {
       email: form.email,
       city: form.city,
       status: "Nieuwe klant",
+      notes: [],
+      projects: [],
     };
 
     setCustomers([...customers, newCustomer]);
+    setSelectedCustomer(newCustomer);
     resetForm();
   }
 
@@ -75,14 +67,54 @@ function Klanten() {
   }
 
   function deleteCustomer(id) {
-    const confirmed = window.confirm("Weet je zeker dat je deze klant wilt verwijderen?");
-    if (!confirmed) return;
+    if (!window.confirm("Weet je zeker dat je deze klant wilt verwijderen?")) return;
 
-    setCustomers(customers.filter((customer) => customer.id !== id));
+    const updatedCustomers = customers.filter((customer) => customer.id !== id);
+    setCustomers(updatedCustomers);
 
-    if (editingId === id) {
-      resetForm();
-    }
+    if (selectedCustomer?.id === id) setSelectedCustomer(null);
+    if (editingId === id) resetForm();
+  }
+
+  function addNote() {
+    if (!selectedCustomer || !noteText.trim()) return;
+
+    const newNote = {
+      id: Date.now(),
+      text: noteText,
+      date: new Date().toLocaleDateString("nl-NL"),
+    };
+
+    const updatedCustomers = customers.map((customer) =>
+      customer.id === selectedCustomer.id
+        ? { ...customer, notes: [...(customer.notes || []), newNote] }
+        : customer
+    );
+
+    setCustomers(updatedCustomers);
+    setSelectedCustomer(updatedCustomers.find((c) => c.id === selectedCustomer.id));
+    setNoteText("");
+  }
+
+  function addProject() {
+    if (!selectedCustomer || !projectTitle.trim()) return;
+
+    const newProject = {
+      id: `PRJ-${Date.now()}`,
+      title: projectTitle,
+      status: "Nieuw project",
+      createdAt: new Date().toLocaleDateString("nl-NL"),
+    };
+
+    const updatedCustomers = customers.map((customer) =>
+      customer.id === selectedCustomer.id
+        ? { ...customer, projects: [...(customer.projects || []), newProject] }
+        : customer
+    );
+
+    setCustomers(updatedCustomers);
+    setSelectedCustomer(updatedCustomers.find((c) => c.id === selectedCustomer.id));
+    setProjectTitle("");
   }
 
   const filteredCustomers = customers.filter((customer) => {
@@ -103,7 +135,7 @@ function Klanten() {
         <div>
           <h2>👥 Klantenbeheer</h2>
           <p className="empty">
-            Klanten toevoegen, zoeken, bewerken, bellen, mailen en route openen.
+            Klanten, notities en projecten beheren.
           </p>
         </div>
       </div>
@@ -128,43 +160,150 @@ function Klanten() {
         {editingId && <button onClick={resetForm}>❌ Annuleren</button>}
       </div>
 
-      <div className="customerList">
-        {filteredCustomers.length === 0 ? (
-          <p className="empty">Geen klanten gevonden.</p>
-        ) : (
-          filteredCustomers.map((customer) => (
-            <div className="customerCard" key={customer.id}>
-              <div>
-                <strong>{customer.name}</strong>
-                <p>{customer.id} • {customer.city}</p>
-              </div>
-
-              <div>
-                <span>{customer.phone}</span>
-                <p>{customer.email}</p>
-              </div>
-
-              <span className="statusBadge">{customer.status}</span>
-
-              <a href={`tel:${customer.phone}`}>📞 Bellen</a>
-
-              <a href={`mailto:${customer.email}`}>📧 Mailen</a>
-
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                  customer.city
-                )}`}
-                target="_blank"
-                rel="noreferrer"
+      <div className="crmLayout">
+        <div className="customerList">
+          {filteredCustomers.length === 0 ? (
+            <p className="empty">Geen klanten gevonden.</p>
+          ) : (
+            filteredCustomers.map((customer) => (
+              <div
+                className={
+                  selectedCustomer?.id === customer.id
+                    ? "customerCard selected"
+                    : "customerCard"
+                }
+                key={customer.id}
+                onClick={() => setSelectedCustomer(customer)}
               >
-                📍 Route
-              </a>
+                <div>
+                  <strong>{customer.name}</strong>
+                  <p>{customer.id} • {customer.city}</p>
+                </div>
 
-              <button onClick={() => editCustomer(customer)}>✏️ Bewerken</button>
-              <button onClick={() => deleteCustomer(customer.id)}>🗑️ Verwijderen</button>
-            </div>
-          ))
-        )}
+                <span className="statusBadge">{customer.status}</span>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="customerDetail">
+          {selectedCustomer ? (
+            <>
+              <div className="detailHeader">
+                <div>
+                  <h3>👤 {selectedCustomer.name}</h3>
+                  <p className="empty">{selectedCustomer.id}</p>
+                </div>
+
+                <span className="statusBadge">{selectedCustomer.status}</span>
+              </div>
+
+              <div className="detailGrid">
+                <div>
+                  <strong>📞 Telefoon</strong>
+                  <p>{selectedCustomer.phone || "Niet ingevuld"}</p>
+                </div>
+
+                <div>
+                  <strong>📧 Email</strong>
+                  <p>{selectedCustomer.email || "Niet ingevuld"}</p>
+                </div>
+
+                <div>
+                  <strong>📍 Plaats</strong>
+                  <p>{selectedCustomer.city || "Niet ingevuld"}</p>
+                </div>
+
+                <div>
+                  <strong>📂 Projecten</strong>
+                  <p>{(selectedCustomer.projects || []).length}</p>
+                </div>
+              </div>
+
+              <div className="detailActions">
+                <a href={`tel:${selectedCustomer.phone}`}>📞 Bellen</a>
+                <a href={`mailto:${selectedCustomer.email}`}>📧 Mailen</a>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    selectedCustomer.city
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  📍 Route
+                </a>
+
+                <button onClick={() => editCustomer(selectedCustomer)}>✏️ Bewerken</button>
+                <button onClick={() => deleteCustomer(selectedCustomer.id)}>🗑️ Verwijderen</button>
+              </div>
+
+              <div className="projectBox">
+                <h4>📂 Projecten</h4>
+
+                <div className="noteInput">
+                  <input
+                    value={projectTitle}
+                    onChange={(event) => setProjectTitle(event.target.value)}
+                    placeholder="Nieuw project, bijvoorbeeld Badkamer renovatie..."
+                  />
+                  <button onClick={addProject}>Project opslaan</button>
+                </div>
+
+                {(selectedCustomer.projects || []).length === 0 ? (
+                  <p className="empty">Nog geen projecten.</p>
+                ) : (
+                  <div className="projectList">
+                    {selectedCustomer.projects.map((project) => (
+                      <div className="projectItem" key={project.id}>
+                        <div>
+                          <strong>{project.title}</strong>
+                          <p>{project.id} • {project.createdAt}</p>
+                        </div>
+                        <span className="statusBadge">{project.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="noteBox">
+                <h4>📝 Notities</h4>
+
+                <div className="noteInput">
+                  <input
+                    value={noteText}
+                    onChange={(event) => setNoteText(event.target.value)}
+                    placeholder="Nieuwe notitie..."
+                  />
+                  <button onClick={addNote}>Opslaan</button>
+                </div>
+
+                {(selectedCustomer.notes || []).length === 0 ? (
+                  <p className="empty">Nog geen notities.</p>
+                ) : (
+                  <div className="noteList">
+                    {selectedCustomer.notes.map((note) => (
+                      <div className="noteItem" key={note.id}>
+                        <strong>{note.date}</strong>
+                        <p>{note.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="aiCustomerNote">
+                <h4>🤖 HF AI Klantadvies</h4>
+                <p>
+                  Ik gebruik straks klantgegevens, notities en projecten om
+                  offertes, planning en herinneringen slimmer te maken.
+                </p>
+              </div>
+            </>
+          ) : (
+            <p className="empty">Klik links op een klant om het klantdossier te openen.</p>
+          )}
+        </div>
       </div>
     </section>
   );
