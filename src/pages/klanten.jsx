@@ -14,6 +14,8 @@ function Klanten() {
     city: "",
   });
 
+  const [editingId, setEditingId] = useState(null);
+
   useEffect(() => {
     localStorage.setItem("hf-customers", JSON.stringify(customers));
   }, [customers]);
@@ -25,8 +27,37 @@ function Klanten() {
     });
   }
 
-  function addCustomer() {
+  function resetForm() {
+    setForm({
+      name: "",
+      phone: "",
+      email: "",
+      city: "",
+    });
+
+    setEditingId(null);
+  }
+
+  function saveCustomer() {
     if (!form.name.trim()) return;
+
+    if (editingId) {
+      const updatedCustomers = customers.map((customer) =>
+        customer.id === editingId
+          ? {
+              ...customer,
+              name: form.name,
+              phone: form.phone,
+              email: form.email,
+              city: form.city,
+            }
+          : customer
+      );
+
+      setCustomers(updatedCustomers);
+      resetForm();
+      return;
+    }
 
     const newCustomer = {
       id: `HF-${String(customers.length + 1).padStart(4, "0")}`,
@@ -38,12 +69,17 @@ function Klanten() {
     };
 
     setCustomers([...customers, newCustomer]);
+    resetForm();
+  }
+
+  function editCustomer(customer) {
+    setEditingId(customer.id);
 
     setForm({
-      name: "",
-      phone: "",
-      email: "",
-      city: "",
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email,
+      city: customer.city,
     });
   }
 
@@ -53,7 +89,7 @@ function Klanten() {
         <div>
           <h2>👥 Klantenbeheer</h2>
           <p className="empty">
-            Beheer klanten, contactgegevens en status.
+            Klanten toevoegen, bewerken en beheren.
           </p>
         </div>
       </div>
@@ -63,7 +99,7 @@ function Klanten() {
           name="name"
           value={form.name}
           onChange={handleChange}
-          placeholder="Naam klant"
+          placeholder="Naam"
         />
 
         <input
@@ -77,7 +113,7 @@ function Klanten() {
           name="email"
           value={form.email}
           onChange={handleChange}
-          placeholder="E-mail"
+          placeholder="Email"
         />
 
         <input
@@ -87,9 +123,15 @@ function Klanten() {
           placeholder="Plaats"
         />
 
-        <button onClick={addCustomer}>
-          ➕ Klant opslaan
+        <button onClick={saveCustomer}>
+          {editingId ? "💾 Wijzigingen opslaan" : "➕ Klant toevoegen"}
         </button>
+
+        {editingId && (
+          <button onClick={resetForm}>
+            ❌ Annuleren
+          </button>
+        )}
       </div>
 
       <div className="customerList">
@@ -110,6 +152,10 @@ function Klanten() {
             <span className="statusBadge">
               {customer.status}
             </span>
+
+            <button onClick={() => editCustomer(customer)}>
+              ✏️ Bewerken
+            </button>
           </div>
         ))}
       </div>
