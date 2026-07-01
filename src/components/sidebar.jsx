@@ -1,3 +1,5 @@
+import logo from "../assets/logo.png";
+
 const menuItems = [
   "Dashboard",
   "Klanten",
@@ -16,9 +18,7 @@ function Sidebar({ activePage, setActivePage }) {
   return (
     <aside className="sidebar">
       <div className="hfLogo">
-        <div className="hfLetters">HF</div>
-        <div className="hfText">Handyman Fisker</div>
-        <div className="hfSub">Office X</div>
+        <img src={logo} alt="HF Office X" className="logo" />
       </div>
 
       <nav className="menu">
