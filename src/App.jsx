@@ -6,6 +6,7 @@ import Klanten from "./pages/klanten";
 import Planning from "./pages/planning";
 import Offertes from "./pages/offertes";
 import Facturen from "./pages/facturen";
+import Projecten from "./pages/projecten";
 import "./App.css";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
     if (activePage === "Planning") return <Planning />;
     if (activePage === "Offertes") return <Offertes />;
     if (activePage === "Facturen") return <Facturen />;
+    if (activePage === "Projecten") return <Projecten />;
 
     return (
       <section className="panel">
@@ -37,6 +39,5 @@ function App() {
     </div>
   );
 }
-
 
 export default App;

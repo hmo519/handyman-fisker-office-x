@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import customersData from "../data/customersData";
+import customersData from "../data/customersdata";
 
 function Klanten() {
   const [customers, setCustomers] = useState(() => {
@@ -7,7 +7,13 @@ function Klanten() {
     return savedCustomers ? JSON.parse(savedCustomers) : customersData;
   });
 
-  const [form, setForm] = useState({ name: "", phone: "", email: "", city: "" });
+  const [form, setForm] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    city: "",
+  });
+
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -34,6 +40,7 @@ function Klanten() {
       const updatedCustomers = customers.map((customer) =>
         customer.id === editingId ? { ...customer, ...form } : customer
       );
+
       setCustomers(updatedCustomers);
       setSelectedCustomer(updatedCustomers.find((c) => c.id === editingId));
       resetForm();
@@ -134,9 +141,7 @@ function Klanten() {
       <div className="pageHeader">
         <div>
           <h2>👥 Klantenbeheer</h2>
-          <p className="empty">
-            Klanten, notities en projecten beheren.
-          </p>
+          <p className="empty">Klanten, notities en projecten beheren.</p>
         </div>
       </div>
 
@@ -144,7 +149,7 @@ function Klanten() {
         className="searchInput"
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        placeholder="🔍 Zoek op naam, klantnummer, telefoon, email of plaats..."
+        placeholder="🔍 Zoek klant..."
       />
 
       <div className="customerForm">
@@ -162,28 +167,19 @@ function Klanten() {
 
       <div className="crmLayout">
         <div className="customerList">
-          {filteredCustomers.length === 0 ? (
-            <p className="empty">Geen klanten gevonden.</p>
-          ) : (
-            filteredCustomers.map((customer) => (
-              <div
-                className={
-                  selectedCustomer?.id === customer.id
-                    ? "customerCard selected"
-                    : "customerCard"
-                }
-                key={customer.id}
-                onClick={() => setSelectedCustomer(customer)}
-              >
-                <div>
-                  <strong>{customer.name}</strong>
-                  <p>{customer.id} • {customer.city}</p>
-                </div>
-
-                <span className="statusBadge">{customer.status}</span>
+          {filteredCustomers.map((customer) => (
+            <div
+              className={selectedCustomer?.id === customer.id ? "customerCard selected" : "customerCard"}
+              key={customer.id}
+              onClick={() => setSelectedCustomer(customer)}
+            >
+              <div>
+                <strong>{customer.name}</strong>
+                <p>{customer.id} • {customer.city}</p>
               </div>
-            ))
-          )}
+              <span className="statusBadge">{customer.status}</span>
+            </div>
+          ))}
         </div>
 
         <div className="customerDetail">
@@ -194,81 +190,54 @@ function Klanten() {
                   <h3>👤 {selectedCustomer.name}</h3>
                   <p className="empty">{selectedCustomer.id}</p>
                 </div>
-
                 <span className="statusBadge">{selectedCustomer.status}</span>
               </div>
 
               <div className="detailGrid">
-                <div>
-                  <strong>📞 Telefoon</strong>
-                  <p>{selectedCustomer.phone || "Niet ingevuld"}</p>
-                </div>
-
-                <div>
-                  <strong>📧 Email</strong>
-                  <p>{selectedCustomer.email || "Niet ingevuld"}</p>
-                </div>
-
-                <div>
-                  <strong>📍 Plaats</strong>
-                  <p>{selectedCustomer.city || "Niet ingevuld"}</p>
-                </div>
-
-                <div>
-                  <strong>📂 Projecten</strong>
-                  <p>{(selectedCustomer.projects || []).length}</p>
-                </div>
+                <div><strong>📞 Telefoon</strong><p>{selectedCustomer.phone || "Niet ingevuld"}</p></div>
+                <div><strong>📧 Email</strong><p>{selectedCustomer.email || "Niet ingevuld"}</p></div>
+                <div><strong>📍 Plaats</strong><p>{selectedCustomer.city || "Niet ingevuld"}</p></div>
+                <div><strong>📂 Projecten</strong><p>{(selectedCustomer.projects || []).length}</p></div>
               </div>
 
               <div className="detailActions">
                 <a href={`tel:${selectedCustomer.phone}`}>📞 Bellen</a>
                 <a href={`mailto:${selectedCustomer.email}`}>📧 Mailen</a>
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                    selectedCustomer.city
-                  )}`}
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedCustomer.city)}`}
                   target="_blank"
                   rel="noreferrer"
                 >
                   📍 Route
                 </a>
-
                 <button onClick={() => editCustomer(selectedCustomer)}>✏️ Bewerken</button>
                 <button onClick={() => deleteCustomer(selectedCustomer.id)}>🗑️ Verwijderen</button>
               </div>
 
               <div className="projectBox">
                 <h4>📂 Projecten</h4>
-
                 <div className="noteInput">
                   <input
                     value={projectTitle}
                     onChange={(event) => setProjectTitle(event.target.value)}
-                    placeholder="Nieuw project, bijvoorbeeld Badkamer renovatie..."
+                    placeholder="Nieuw project..."
                   />
                   <button onClick={addProject}>Project opslaan</button>
                 </div>
 
-                {(selectedCustomer.projects || []).length === 0 ? (
-                  <p className="empty">Nog geen projecten.</p>
-                ) : (
-                  <div className="projectList">
-                    {selectedCustomer.projects.map((project) => (
-                      <div className="projectItem" key={project.id}>
-                        <div>
-                          <strong>{project.title}</strong>
-                          <p>{project.id} • {project.createdAt}</p>
-                        </div>
-                        <span className="statusBadge">{project.status}</span>
-                      </div>
-                    ))}
+                {(selectedCustomer.projects || []).map((project) => (
+                  <div className="projectItem" key={project.id}>
+                    <div>
+                      <strong>{project.title}</strong>
+                      <p>{project.id} • {project.createdAt}</p>
+                    </div>
+                    <span className="statusBadge">{project.status}</span>
                   </div>
-                )}
+                ))}
               </div>
 
               <div className="noteBox">
                 <h4>📝 Notities</h4>
-
                 <div className="noteInput">
                   <input
                     value={noteText}
@@ -278,26 +247,12 @@ function Klanten() {
                   <button onClick={addNote}>Opslaan</button>
                 </div>
 
-                {(selectedCustomer.notes || []).length === 0 ? (
-                  <p className="empty">Nog geen notities.</p>
-                ) : (
-                  <div className="noteList">
-                    {selectedCustomer.notes.map((note) => (
-                      <div className="noteItem" key={note.id}>
-                        <strong>{note.date}</strong>
-                        <p>{note.text}</p>
-                      </div>
-                    ))}
+                {(selectedCustomer.notes || []).map((note) => (
+                  <div className="noteItem" key={note.id}>
+                    <strong>{note.date}</strong>
+                    <p>{note.text}</p>
                   </div>
-                )}
-              </div>
-
-              <div className="aiCustomerNote">
-                <h4>🤖 HF AI Klantadvies</h4>
-                <p>
-                  Ik gebruik straks klantgegevens, notities en projecten om
-                  offertes, planning en herinneringen slimmer te maken.
-                </p>
+                ))}
               </div>
             </>
           ) : (
