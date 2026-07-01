@@ -44,9 +44,7 @@ function Klanten() {
     if (editingId) {
       setCustomers(
         customers.map((customer) =>
-          customer.id === editingId
-            ? { ...customer, ...form }
-            : customer
+          customer.id === editingId ? { ...customer, ...form } : customer
         )
       );
       resetForm();
@@ -105,7 +103,7 @@ function Klanten() {
         <div>
           <h2>👥 Klantenbeheer</h2>
           <p className="empty">
-            Klanten toevoegen, zoeken, bewerken en verwijderen.
+            Klanten toevoegen, zoeken, bewerken, bellen, mailen en route openen.
           </p>
         </div>
       </div>
@@ -147,6 +145,20 @@ function Klanten() {
               </div>
 
               <span className="statusBadge">{customer.status}</span>
+
+              <a href={`tel:${customer.phone}`}>📞 Bellen</a>
+
+              <a href={`mailto:${customer.email}`}>📧 Mailen</a>
+
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  customer.city
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                📍 Route
+              </a>
 
               <button onClick={() => editCustomer(customer)}>✏️ Bewerken</button>
               <button onClick={() => deleteCustomer(customer.id)}>🗑️ Verwijderen</button>
