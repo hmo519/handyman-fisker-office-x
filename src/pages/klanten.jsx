@@ -34,7 +34,6 @@ function Klanten() {
       email: "",
       city: "",
     });
-
     setEditingId(null);
   }
 
@@ -74,7 +73,6 @@ function Klanten() {
 
   function editCustomer(customer) {
     setEditingId(customer.id);
-
     setForm({
       name: customer.name,
       phone: customer.phone,
@@ -83,14 +81,25 @@ function Klanten() {
     });
   }
 
+  function deleteCustomer(id) {
+    const confirmed = window.confirm("Weet je zeker dat je deze klant wilt verwijderen?");
+
+    if (!confirmed) return;
+
+    const updatedCustomers = customers.filter((customer) => customer.id !== id);
+    setCustomers(updatedCustomers);
+
+    if (editingId === id) {
+      resetForm();
+    }
+  }
+
   return (
     <section className="panel">
       <div className="pageHeader">
         <div>
           <h2>👥 Klantenbeheer</h2>
-          <p className="empty">
-            Klanten toevoegen, bewerken en beheren.
-          </p>
+          <p className="empty">Klanten toevoegen, bewerken en verwijderen.</p>
         </div>
       </div>
 
@@ -127,11 +136,7 @@ function Klanten() {
           {editingId ? "💾 Wijzigingen opslaan" : "➕ Klant toevoegen"}
         </button>
 
-        {editingId && (
-          <button onClick={resetForm}>
-            ❌ Annuleren
-          </button>
-        )}
+        {editingId && <button onClick={resetForm}>❌ Annuleren</button>}
       </div>
 
       <div className="customerList">
@@ -149,12 +154,12 @@ function Klanten() {
               <p>{customer.email}</p>
             </div>
 
-            <span className="statusBadge">
-              {customer.status}
-            </span>
+            <span className="statusBadge">{customer.status}</span>
 
-            <button onClick={() => editCustomer(customer)}>
-              ✏️ Bewerken
+            <button onClick={() => editCustomer(customer)}>✏️ Bewerken</button>
+
+            <button onClick={() => deleteCustomer(customer.id)}>
+              🗑️ Verwijderen
             </button>
           </div>
         ))}
