@@ -1,20 +1,16 @@
 import { useState } from "react";
+import {
+  getInvoices,
+  getPlanning,
+  getProjects,
+  saveInvoices,
+  savePlanning,
+} from "../services/storage";
 
 function AiActions() {
-  const [projects] = useState(() => {
-    const saved = localStorage.getItem("hf-projects");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [invoices, setInvoices] = useState(() => {
-    const saved = localStorage.getItem("hf-invoices");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [planning, setPlanning] = useState(() => {
-    const saved = localStorage.getItem("hf-planning");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [projects] = useState(() => getProjects());
+  const [invoices, setInvoices] = useState(() => getInvoices());
+  const [planning, setPlanning] = useState(() => getPlanning());
 
   const [lastRun, setLastRun] = useState(() => {
     return localStorage.getItem("hf-ai-last-run") || "Nog nooit";
@@ -67,10 +63,10 @@ function AiActions() {
     setPlanning(newPlanning);
     setInvoices(newInvoices);
 
-    localStorage.setItem("hf-planning", JSON.stringify(newPlanning));
-    localStorage.setItem("hf-invoices", JSON.stringify(newInvoices));
-    localStorage.setItem("hf-ai-last-run", today);
+    savePlanning(newPlanning);
+    saveInvoices(newInvoices);
 
+    localStorage.setItem("hf-ai-last-run", today);
     setLastRun(today);
 
     alert("🤖 AI CEO heeft je bedrijfsdag geoptimaliseerd.");
@@ -127,7 +123,7 @@ function AiActions() {
               <li>📅 Maakt planning als vandaag leeg is</li>
               <li>🧾 Maakt facturen voor projecten met taken</li>
               <li>🛡️ Voorkomt dubbele facturen per project</li>
-              <li>💾 Slaat alles automatisch op</li>
+              <li>💾 Slaat alles via centrale storage service op</li>
             </ul>
           </div>
         </div>
