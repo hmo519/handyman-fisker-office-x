@@ -16,128 +16,119 @@ function AiActions() {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [lastRun, setLastRun] = useState(() => {
+    return localStorage.getItem("hf-ai-last-run") || "Nog nooit";
+  });
+
   const today = new Date().toISOString().split("T")[0];
 
-  function createAutoInvoice(project) {
-    const taskCount = project.tasks ? project.tasks.length : 0;
+  function runAutonomousAI() {
+    let newPlanning = [...planning];
+    let newInvoices = [...invoices];
 
-    if (taskCount === 0) return;
+    const todayPlanning = newPlanning.filter((p) => p.date === today);
 
-    const price = 45;
-    const total = taskCount * price;
+    if (todayPlanning.length === 0 && projects.length > 0) {
+      const autoPlanning = projects.slice(0, 3).map((project, index) => ({
+        id: `AI-PLAN-${Date.now()}-${index}`,
+        projectId: project.id,
+        date: today,
+        time: `${8 + index * 2}:00`,
+      }));
 
-    const newInvoice = {
-      id: `AUTO-${Date.now()}`,
-      projectId: project.id,
-      projectName: project.title,
-      tasks: taskCount,
-      total,
-      date: new Date().toLocaleDateString("nl-NL"),
-    };
+      newPlanning = [...newPlanning, ...autoPlanning];
+    }
 
-    setInvoices([...invoices, newInvoice]);
-    localStorage.setItem(
-      "hf-invoices",
-      JSON.stringify([...invoices, newInvoice])
-    );
-  }
+    projects.forEach((project) => {
+      const taskCount = project.tasks ? project.tasks.length : 0;
+      const invoiceExists = newInvoices.some(
+        (invoice) => invoice.projectId === project.id
+      );
 
-  function autoFillToday() {
-    const empty = planning.filter((p) => p.date === today);
+      if (taskCount > 0 && !invoiceExists) {
+        const subtotal = taskCount * 50;
+        const tax = subtotal * 0.21;
+        const total = subtotal + tax;
 
-    if (empty.length > 0) return;
-
-    const newPlan = projects.slice(0, 3).map((p, i) => ({
-      id: `AUTO-PLN-${Date.now()}-${i}`,
-      projectId: p.id,
-      date: today,
-      time: `${8 + i * 2}:00`,
-    }));
-
-    setPlanning(newPlan);
-    localStorage.setItem("hf-planning", JSON.stringify(newPlan));
-  }
-
-  function autoRunSystem() {
-    // 1. auto planning vullen
-    autoFillToday();
-
-    // 2. auto facturen genereren
-    projects.forEach((p) => {
-      if (p.tasks && p.tasks.length > 0) {
-        const already = invoices.find((i) => i.projectId === p.id);
-        if (!already) {
-          createAutoInvoice(p);
-        }
+        newInvoices.push({
+          id: `AI-INV-${Date.now()}-${project.id}`,
+          projectId: project.id,
+          projectName: project.title,
+          tasks: taskCount,
+          subtotal,
+          tax,
+          total,
+          date: new Date().toLocaleDateString("nl-NL"),
+          status: "AI gegenereerd",
+        });
       }
     });
+
+    setPlanning(newPlanning);
+    setInvoices(newInvoices);
+
+    localStorage.setItem("hf-planning", JSON.stringify(newPlanning));
+    localStorage.setItem("hf-invoices", JSON.stringify(newInvoices));
+    localStorage.setItem("hf-ai-last-run", today);
+
+    setLastRun(today);
+
+    alert("🤖 AI CEO heeft je bedrijfsdag geoptimaliseerd.");
   }
 
   return (
     <section className="panel">
       <div className="pageHeader">
-        <h2>⚡ HF AI Auto Engine</h2>
+        <h2>🤖 HF AI CEO Mode</h2>
         <p className="empty">
-          Systeem dat automatisch acties uitvoert
+          De AI voert zelfstandig veilige bedrijfsacties uit.
         </p>
       </div>
 
       <div className="crmLayout">
-        {/* STATUS */}
         <div className="customerList">
-          <h3>📊 System check</h3>
+          <h3>📊 AI Status</h3>
 
-          <div className="noteItem">
-            📂 Projecten: {projects.length}
-          </div>
-
-          <div className="noteItem">
-            🧾 Facturen: {invoices.length}
-          </div>
-
-          <div className="noteItem">
-            📅 Planning: {planning.length}
-          </div>
+          <div className="noteItem">📂 Projecten: {projects.length}</div>
+          <div className="noteItem">📅 Planning: {planning.length}</div>
+          <div className="noteItem">🧾 Facturen: {invoices.length}</div>
+          <div className="noteItem">🕒 Laatste run: {lastRun}</div>
         </div>
 
-        {/* ENGINE */}
         <div className="customerDetail">
-          <h3>⚡ Auto Actions</h3>
+          <h3>⚡ Autonomous Control</h3>
 
           <div className="aiCustomerNote">
-            <h4>🤖 Automatische acties</h4>
+            <h4>🚀 Run AI CEO</h4>
+            <p>
+              Deze knop laat de AI veilig planning aanvullen en facturen
+              klaarzetten zonder dubbele facturen te maken.
+            </p>
 
             <button
-              onClick={autoRunSystem}
+              onClick={runAutonomousAI}
               style={{
-                padding: "12px 16px",
+                padding: "14px 18px",
                 background: "#22c55e",
                 color: "white",
                 border: "none",
-                borderRadius: "10px",
-                cursor: "pointer",
+                borderRadius: "12px",
                 fontWeight: "bold",
+                cursor: "pointer",
               }}
             >
-              🚀 Start Auto Engine
+              🤖 RUN AI CEO MODE
             </button>
           </div>
 
           <div className="aiCustomerNote">
-            <h4>⚙️ Wat gebeurt er?</h4>
+            <h4>🧠 Wat doet de AI?</h4>
             <ul>
-              <li>📅 Planning wordt automatisch gevuld</li>
-              <li>🧾 Facturen worden gegenereerd</
-              li>
-              <li>📂 Werk wordt gecontroleerd</li>
+              <li>📅 Maakt planning als vandaag leeg is</li>
+              <li>🧾 Maakt facturen voor projecten met taken</li>
+              <li>🛡️ Voorkomt dubbele facturen per project</li>
+              <li>💾 Slaat alles automatisch op</li>
             </ul>
-          </div>
-
-          <div className="aiCustomerNote">
-            <h4>🧠 Status</h4>
-            <p>
-              HF AI V4 kan nu zelfstandig bedrijfsprocessen uitvoeren.
-            </p>
           </div>
         </div>
       </div>

@@ -1,161 +1,134 @@
 import { useState } from "react";
 
-function AiAssistant() {
-  const [customers] = useState(() => {
-    const saved = localStorage.getItem("hf-customers");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [projects] = useState(() => {
+function AiActions() {
+  const [projects, setProjects] = useState(() => {
     const saved = localStorage.getItem("hf-projects");
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [invoices] = useState(() => {
+  const [invoices, setInvoices] = useState(() => {
     const saved = localStorage.getItem("hf-invoices");
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [planning] = useState(() => {
+  const [planning, setPlanning] = useState(() => {
     const saved = localStorage.getItem("hf-planning");
     return saved ? JSON.parse(saved) : [];
   });
 
   const today = new Date().toISOString().split("T")[0];
 
-  const todayPlanning = planning.filter((p) => p.date === today);
+  // 🤖 AI ACTION ENGINE
+  function runAIExecution() {
+    let newPlanning = [...planning];
+    let newInvoices = [...invoices];
+    let newProjects = [...projects];
 
-  // 🔥 ANALYSE DATA
-  const totalRevenue = invoices.reduce(
-    (sum, i) => sum + (i.total || 0),
-    0
-  );
+    // 📅 AUTO PLANNING FIX
+    const todayPlan = newPlanning.filter(p => p.date === today);
 
-  const emptyProjects = projects.filter(
-    (p) => !p.tasks || p.tasks.length === 0
-  );
-
-  const openInvoices = invoices.length;
-
-  // 🤖 AUTOPILOT ACTIONS
-  function generateActions() {
-    const actions = [];
-
-    // 1. lege dag
-    if (todayPlanning.length === 0) {
-      actions.push("📅 Maak planning voor vandaag");
+    if (todayPlan.length === 0 && projects.length > 0) {
+      newPlanning = projects.slice(0, 3).map((p, i) => ({
+        id: `AI-PLAN-${Date.now()}-${i}`,
+        projectId: p.id,
+        date: today,
+        time: `${8 + i * 2}:00`,
+      }));
     }
 
-    // 2. open facturen
-    if (openInvoices > 0) {
-      actions.push("💰 Verstuur openstaande facturen");
-    }
+    // 🧾 AUTO FACTUREN
+    newProjects.forEach((p) => {
+      const taskCount = p.tasks ? p.tasks.length : 0;
 
-    // 3. lege projecten
-    if (emptyProjects.length > 0) {
-      actions.push(
-        `📂 Voeg taken toe aan ${emptyProjects.length} projecten`
-      );
-    }
+      if (taskCount > 0) {
+        const exists = newInvoices.find(i => i.projectId === p.id);
 
-    // 4. lage omzet
-    if (totalRevenue < 1500) {
-      actions.push("📈 Focus op afronden projecten voor meer omzet");
-    }
+        if (!exists) {
+          newInvoices.push({
+            id: `AI-INV-${Date.now()}-${p.id}`,
+            projectId: p.id,
+            projectName: p.title,
+            total: taskCount * 50,
+            date: new Date().toLocaleDateString("nl-NL"),
+          });
+        }
+      }
+    });
 
-    // 5. geen klanten
-    if (customers.length === 0) {
-      actions.push("👤 Voeg nieuwe klanten toe");
-    }
+    setPlanning(newPlanning);
+    setInvoices(newInvoices);
 
-    return actions;
-  }
+    localStorage.setItem("hf-planning", JSON.stringify(newPlanning));
+    localStorage.setItem("hf-invoices", JSON.stringify(newInvoices));
 
-  const actions = generateActions();
-
-  // 🎯 PRIORITY ENGINE
-  function getPriority() {
-    if (todayPlanning.length === 0) {
-      return "Start met je planning voor vandaag";
-    }
-
-    if (openInvoices > 3) {
-      return "Verstuur facturen om cashflow te verbeteren";
-    }
-
-    if (emptyProjects.length > 0) {
-      return "Werk je projecten bij met taken";
-    }
-
-    return "Systeem draait goed – optimaliseer werkflow";
+    alert("🚀 AI EXECUTION COMPLETED: planning + facturen aangemaakt");
   }
 
   return (
     <section className="panel">
       <div className="pageHeader">
-        <h2>🚀 HF Autopilot V2</h2>
+        <h2>⚡ HF AI Action Executor</h2>
         <p className="empty">
-          Zelfsturende bedrijfsassistent
+          AI voert nu automatisch bedrijfsacties uit
         </p>
       </div>
 
       <div className="crmLayout">
+
         {/* STATUS */}
         <div className="customerList">
-          <h3>📊 Systeem status</h3>
+          <h3>📊 System Status</h3>
 
-          <div className="noteItem">
-            💰 €{totalRevenue.toFixed(2)}
-          </div>
-
-          <div className="noteItem">
-            📂 Projecten: {projects.length}
-          </div>
-
-          <div className="noteItem">
-            🧾 Facturen: {invoices.length}
-          </div>
-
-          <div className="noteItem">
-            📅 Vandaag: {todayPlanning.length}
-          </div>
+          <div className="noteItem">📂 Projecten</div>
+          <div className="noteItem">🧾 Facturen</div>
+          <div className="noteItem">📅 Planning</div>
         </div>
 
-        {/* AUTOPILOT CORE */}
+        {/* EXECUTION */}
         <div className="customerDetail">
-          <h3>🤖 Autopilot Engine</h3>
+
+          <h3>🤖 AI Execution Core</h3>
 
           <div className="aiCustomerNote">
-            <h4>⚡ Prioriteit</h4>
-            <p>{getPriority()}</p>
+            <h4>🚀 Run AI Business Engine</h4>
+
+            <button
+              onClick={runAIExecution}
+              style={{
+                padding: "14px 18px",
+                background: "#ef4444",
+                color: "white",
+                border: "none",
+                borderRadius: "12px",
+                fontWeight: "bold",
+                cursor: "pointer"
+              }}
+            >
+              ⚡ EXECUTE AI ACTIONS
+            </button>
           </div>
 
           <div className="aiCustomerNote">
-            <h4>📌 Acties</h4>
-            {actions.map((a, i) => (
-              <p key={i}>👉 {a}</p>
-            ))}
+            <h4>🧠 Wat doet dit?</h4>
+            <ul>
+              <li>📅 maakt planning automatisch</li>
+              <li>🧾 genereert facturen</li>
+              <li>📂 analyseert projecten</li>
+              <li>⚡ voert business logica uit</li>
+            </ul>
           </div>
 
           <div className="aiCustomerNote">
-            <h4>🧠 Status</h4>
+            <h4>⚠️ Status</h4>
             <p>
-              HF AI is nu in AUTOPILOT modus. Het systeem genereert acties
-              automatisch op basis van bedrijfsdata.
+              Dit is de eerste versie van een AI die acties kan uitvoeren in je bedrijf.
             </p>
           </div>
 
-          <div className="aiCustomerNote">
-            <h4>🚀 Volgende stap</h4>
-            <p>
-              Volgende upgrade: automatische uitvoering van acties (planning
-              vullen, facturen maken, klanten opvolgen).
-            </p>
-          </div>
         </div>
       </div>
     </section>
   );
 }
 
-export default AiAssistant;
+export default AiActions;
