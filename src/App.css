@@ -800,3 +800,114 @@ button {
   color: white;
   font-size: 15px;
 }
+
+/* ===========================
+   SIDEBAR 2.0
+=========================== */
+
+.sidebarItem{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:14px;
+
+    padding:14px 16px;
+
+    border:none;
+    background:transparent;
+    color:#cbd5e1;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    transition:.2s;
+}
+
+.sidebarItem:hover{
+    background:#1e293b;
+}
+
+.sidebarItem.active{
+    background:var(--hf-accent);
+    color:white;
+}
+
+.sidebarIcon{
+    font-size:20px;
+    min-width:24px;
+    text-align:center;
+}
+
+.sidebarLabel{
+    font-size:15px;
+    font-weight:600;
+}
+
+.sidebar.collapsed{
+    width:90px;
+}
+
+.collapseButton{
+    width:100%;
+    margin-bottom:20px;
+    padding:10px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    background:#1e293b;
+    color:white;
+}
+
+.collapseButton:hover{
+    background:#334155;
+}
+
+.healthBar {
+  height: 12px;
+  background: #1e293b;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.healthFill {
+  height: 100%;
+  background: #22c55e;
+  border-radius: 999px;
+}
+
+.quickActionsGrid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:16px;
+}
+.revenueChart {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 220px;
+  gap: 16px;
+}
+
+.chartColumn {
+  flex: 1;
+  text-align: center;
+}
+
+.chartBar {
+  background: linear-gradient(180deg, #2563eb, #1d4ed8);
+  border-radius: 10px 10px 0 0;
+  transition: 0.3s;
+}
+
+.chartBar:hover {
+  filter: brightness(1.15);
+}
+
+.chartColumn span {
+  display: block;
+  margin-top: 8px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
