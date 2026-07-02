@@ -2,6 +2,7 @@ import logo from "../assets/logo.png";
 
 const menuItems = [
   "Dashboard",
+  "Meldingen",
 
   "Klanten",
   "Planning",
@@ -9,14 +10,12 @@ const menuItems = [
   "Offertes",
   "Facturen",
 
-  /* AI LAYER */
   "AI Assistent",
   "AI Auto Engine",
   "Autopilot",
   "Dag Advies",
   "System Brain",
 
-  /* ADVANCED */
   "Action Center",
   "Business Autopilot",
   "Simulation",
@@ -27,15 +26,12 @@ const menuItems = [
 function Sidebar({ activePage, setActivePage }) {
   return (
     <aside className="sidebar">
-
-      {/* LOGO */}
       <div className="hfLogo">
         <img src={logo} alt="HF Office X" className="logo" />
         <div className="hfText">Handyman Fisker</div>
         <div className="hfSub">Office X</div>
       </div>
 
-      {/* MENU */}
       <nav className="menu">
         {menuItems.map((item) => (
           <button
@@ -48,7 +44,6 @@ function Sidebar({ activePage, setActivePage }) {
         ))}
       </nav>
 
-      {/* USER */}
       <div className="userBox">
         <div className="avatar">C</div>
         <div>
@@ -56,7 +51,6 @@ function Sidebar({ activePage, setActivePage }) {
           <span>Eigenaar</span>
         </div>
       </div>
-
     </aside>
   );
 }
