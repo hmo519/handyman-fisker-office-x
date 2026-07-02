@@ -1,11 +1,8 @@
 import { useState } from "react";
-import {
-  getInvoices,
-  getPlanning,
-  getProjects,
-  saveInvoices,
-  savePlanning,
-} from "../services/storage";
+import { getInvoices, getPlanning, getProjects } from "../services/storage";
+import { addAutoPlanning } from "../services/planningService";
+import { createInvoicesFromProjects } from "../services/invoiceService";
+import { addNotification } from "../services/notificationService";
 
 function AiActions() {
   const [projects] = useState(() => getProjects());
@@ -16,58 +13,21 @@ function AiActions() {
     return localStorage.getItem("hf-ai-last-run") || "Nog nooit";
   });
 
-  const today = new Date().toISOString().split("T")[0];
-
   function runAutonomousAI() {
-    let newPlanning = [...planning];
-    let newInvoices = [...invoices];
+    const updatedPlanning = addAutoPlanning(projects);
+    const updatedInvoices = createInvoicesFromProjects(projects);
 
-    const todayPlanning = newPlanning.filter((p) => p.date === today);
+    setPlanning(updatedPlanning);
+    setInvoices(updatedInvoices);
 
-    if (todayPlanning.length === 0 && projects.length > 0) {
-      const autoPlanning = projects.slice(0, 3).map((project, index) => ({
-        id: `AI-PLAN-${Date.now()}-${index}`,
-        projectId: project.id,
-        date: today,
-        time: `${8 + index * 2}:00`,
-      }));
-
-      newPlanning = [...newPlanning, ...autoPlanning];
-    }
-
-    projects.forEach((project) => {
-      const taskCount = project.tasks ? project.tasks.length : 0;
-      const invoiceExists = newInvoices.some(
-        (invoice) => invoice.projectId === project.id
-      );
-
-      if (taskCount > 0 && !invoiceExists) {
-        const subtotal = taskCount * 50;
-        const tax = subtotal * 0.21;
-        const total = subtotal + tax;
-
-        newInvoices.push({
-          id: `AI-INV-${Date.now()}-${project.id}`,
-          projectId: project.id,
-          projectName: project.title,
-          tasks: taskCount,
-          subtotal,
-          tax,
-          total,
-          date: new Date().toLocaleDateString("nl-NL"),
-          status: "AI gegenereerd",
-        });
-      }
-    });
-
-    setPlanning(newPlanning);
-    setInvoices(newInvoices);
-
-    savePlanning(newPlanning);
-    saveInvoices(newInvoices);
-
+    const today = new Date().toISOString().split("T")[0];
     localStorage.setItem("hf-ai-last-run", today);
     setLastRun(today);
+
+    addNotification(
+      "AI CEO",
+      "AI heeft planning gecontroleerd en facturen automatisch verwerkt."
+    );
 
     alert("🤖 AI CEO heeft je bedrijfsdag geoptimaliseerd.");
   }
@@ -76,9 +36,7 @@ function AiActions() {
     <section className="panel">
       <div className="pageHeader">
         <h2>🤖 HF AI CEO Mode</h2>
-        <p className="empty">
-          De AI voert zelfstandig veilige bedrijfsacties uit.
-        </p>
+        <p className="empty">Aangestuurd via centrale services</p>
       </div>
 
       <div className="crmLayout">
@@ -97,8 +55,8 @@ function AiActions() {
           <div className="aiCustomerNote">
             <h4>🚀 Run AI CEO</h4>
             <p>
-              Deze knop laat de AI veilig planning aanvullen en facturen
-              klaarzetten zonder dubbele facturen te maken.
+              Deze versie gebruikt Planning Service, Invoice Service en
+              Notification Service.
             </p>
 
             <button
@@ -115,16 +73,6 @@ function AiActions() {
             >
               🤖 RUN AI CEO MODE
             </button>
-          </div>
-
-          <div className="aiCustomerNote">
-            <h4>🧠 Wat doet de AI?</h4>
-            <ul>
-              <li>📅 Maakt planning als vandaag leeg is</li>
-              <li>🧾 Maakt facturen voor projecten met taken</li>
-              <li>🛡️ Voorkomt dubbele facturen per project</li>
-              <li>💾 Slaat alles via centrale storage service op</li>
-            </ul>
           </div>
         </div>
       </div>

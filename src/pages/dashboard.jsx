@@ -1,120 +1,124 @@
-import { useState } from "react";
+import { useAppState } from "../context/AppState.jsx";
+import StatCard from "../components/ui/StatCard";
 
 function Dashboard() {
-  const [customers] = useState(() => {
-    const saved = localStorage.getItem("hf-customers");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { dashboard, notifications, runAI, refresh } = useAppState();
 
-  const [projects] = useState(() => {
-    const saved = localStorage.getItem("hf-projects");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [invoices] = useState(() => {
-    const saved = localStorage.getItem("hf-invoices");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const totalRevenue = invoices.reduce(
-    (sum, i) => sum + (i.total || 0),
-    0
-  );
-
-  const activeProjects = projects.filter(
-    (p) => p.status !== "Klaar"
-  );
-
-  const openInvoices = invoices.length;
-
-  // 🧠 AI ANALYSE
-  function getStatus() {
-    if (customers.length === 0)
-      return "⚠️ Geen klanten → bedrijf staat stil";
-
-    if (projects.length === 0)
-      return "📂 Geen projecten → geen werk actief";
-
-    if (openInvoices === 0)
-      return "💰 Geen facturen → geen cashflow";
-
-    if (totalRevenue < 1000)
-      return "📉 Lage omzet → focus op afronden werk";
-
-    return "🧠 Bedrijf draait stabiel";
-  }
-
-  function getFocus() {
-    if (openInvoices > 3)
-      return "💰 Facturen opvolgen";
-
-    if (activeProjects.length > 0)
-      return "📂 Projecten afronden";
-
-    return "🚀 Nieuwe klanten genereren";
-  }
-
-  function getBestCustomer() {
-    if (customers.length === 0) return "Geen data";
-
-    return customers[0].name;
-  }
+  const data = dashboard.data;
+  const forecast = dashboard.forecast;
+  const ceoMessage = dashboard.ceoMessage;
+  const ceoSummary = dashboard.ceoSummary;
 
   return (
     <section className="panel">
       <div className="pageHeader">
-        <h2>🏢 HF CEO Dashboard</h2>
-        <p className="empty">
-          Volledig overzicht van je bedrijf in realtime
-        </p>
+        <div>
+          <h2>🏢 HF COMMAND CENTER</h2>
+          <p className="empty">Aangestuurd door centrale AppState</p>
+        </div>
+
+        <div className="detailActions">
+          <button onClick={refresh}>🔄 Vernieuwen</button>
+          <button onClick={runAI}>🤖 Run AI</button>
+        </div>
+      </div>
+
+      <div className="stats">
+        <StatCard
+          icon="💰"
+          title="Omzet"
+          value={`€${data.totalRevenue.toFixed(2)}`}
+          subtitle={`Groei: €${forecast.growth.toFixed(2)}`}
+        />
+
+        <StatCard
+          icon="👥"
+          title="Klanten"
+          value={data.customers.length}
+          subtitle="CRM Database"
+        />
+
+        <StatCard
+          icon="📂"
+          title="Projecten"
+          value={data.projects.length}
+          subtitle={`${data.emptyProjects.length} zonder taken`}
+        />
+
+        <StatCard
+          icon="🧾"
+          title="Facturen"
+          value={data.invoices.length}
+          subtitle="Automatisch gekoppeld"
+        />
       </div>
 
       <div className="crmLayout">
-        {/* LEFT */}
         <div className="customerList">
-          <h3>📊 KPI</h3>
+          <h3>🤖 AI CEO Bericht</h3>
 
-          <div className="noteItem">
-            💰 €{totalRevenue.toFixed(2)}
+          <div className="aiCustomerNote">
+            <h4>{ceoMessage.title}</h4>
+            <p>{ceoMessage.message}</p>
+            <p>
+              <strong>Prioriteit:</strong> {ceoMessage.priority}
+            </p>
           </div>
 
-          <div className="noteItem">
-            👤 {customers.length} klanten
-          </div>
+          <h3>📅 Planning vandaag</h3>
 
-          <div className="noteItem">
-            📂 {projects.length} projecten
-          </div>
+          {data.todayPlanning.length === 0 ? (
+            <p className="empty">Geen planning vandaag</p>
+          ) : (
+            data.todayPlanning.map((item) => (
+              <div className="noteItem" key={item.id}>
+                <strong>{item.time}</strong>
+                <p>Project ID: {item.projectId}</p>
+              </div>
+            ))
+          )}
 
-          <div className="noteItem">
-            🧾 {invoices.length} facturen
-          </div>
+          <h3>🔔 Laatste meldingen</h3>
+
+          {notifications.length === 0 ? (
+            <p className="empty">Geen meldingen</p>
+          ) : (
+            notifications.slice(0, 3).map((notification) => (
+              <div className="noteItem" key={notification.id}>
+                <strong>{notification.type}</strong>
+                <p>{notification.message}</p>
+              </div>
+            ))
+          )}
         </div>
 
-        {/* RIGHT AI */}
         <div className="customerDetail">
-          <h3>🧠 CEO AI Analyse</h3>
+          <h3>🧠 AI CEO Control Panel</h3>
 
           <div className="aiCustomerNote">
-            <h4>📌 Status</h4>
-            <p>{getStatus()}</p>
+            <h4>📌 Bedrijfsgezondheid</h4>
+            <p>{dashboard.businessHealth}</p>
           </div>
 
           <div className="aiCustomerNote">
-            <h4>🎯 Focus vandaag</h4>
-            <p>{getFocus()}</p>
+            <h4>📋 CEO Samenvatting</h4>
+            {ceoSummary.map((line, index) => (
+              <p key={index}>• {line}</p>
+            ))}
           </div>
 
           <div className="aiCustomerNote">
-            <h4>🏆 Beste klant</h4>
-            <p>{getBestCustomer()}</p>
+            <h4>⚡ Dagadvies</h4>
+            {dashboard.dailyAdvice.map((item, index) => (
+              <p key={index}>👉 {item}</p>
+            ))}
           </div>
 
           <div className="aiCustomerNote">
-            <h4>🚀 AI advies</h4>
-            <p>
-              Dit dashboard helpt je beslissen waar je vandaag geld kunt verdienen.
-            </p>
+            <h4>📈 Omzet voorspelling</h4>
+            <p>Huidig: €{forecast.current.toFixed(2)}</p>
+            <p>Voorzichtig: €{forecast.conservative.toFixed(2)}</p>
+            <p>Groei: €{forecast.growth.toFixed(2)}</p>
           </div>
         </div>
       </div>

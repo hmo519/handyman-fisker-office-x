@@ -9,6 +9,7 @@ import Planning from "./pages/planning";
 import Projecten from "./pages/projecten";
 import Offertes from "./pages/offertes";
 import Facturen from "./pages/facturen";
+import Instellingen from "./pages/instellingen";
 
 import Notifications from "./pages/notifications";
 
@@ -43,6 +44,8 @@ function App() {
         return <Offertes />;
       case "Facturen":
         return <Facturen />;
+      case "Instellingen":
+        return <Instellingen />;
       case "AI Assistent":
         return <AiAssistant />;
       case "AI Auto Engine":
