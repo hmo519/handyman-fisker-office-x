@@ -1,73 +1,124 @@
-import dashboardData from "../data/dashboardData";
+import { useState } from "react";
 
 function Dashboard() {
+  const [customers] = useState(() => {
+    const saved = localStorage.getItem("hf-customers");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [projects] = useState(() => {
+    const saved = localStorage.getItem("hf-projects");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [invoices] = useState(() => {
+    const saved = localStorage.getItem("hf-invoices");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const totalRevenue = invoices.reduce(
+    (sum, i) => sum + (i.total || 0),
+    0
+  );
+
+  const activeProjects = projects.filter(
+    (p) => p.status !== "Klaar"
+  );
+
+  const openInvoices = invoices.length;
+
+  // 🧠 AI ANALYSE
+  function getStatus() {
+    if (customers.length === 0)
+      return "⚠️ Geen klanten → bedrijf staat stil";
+
+    if (projects.length === 0)
+      return "📂 Geen projecten → geen werk actief";
+
+    if (openInvoices === 0)
+      return "💰 Geen facturen → geen cashflow";
+
+    if (totalRevenue < 1000)
+      return "📉 Lage omzet → focus op afronden werk";
+
+    return "🧠 Bedrijf draait stabiel";
+  }
+
+  function getFocus() {
+    if (openInvoices > 3)
+      return "💰 Facturen opvolgen";
+
+    if (activeProjects.length > 0)
+      return "📂 Projecten afronden";
+
+    return "🚀 Nieuwe klanten genereren";
+  }
+
+  function getBestCustomer() {
+    if (customers.length === 0) return "Geen data";
+
+    return customers[0].name;
+  }
+
   return (
-    <div className="smart-dashboard">
-      <section className="stats">
-        <div className="stat blue">
-          <span>📅 Klussen vandaag</span>
-          <h2>{dashboardData.jobsToday}</h2>
-          <p>Volgende klus om {dashboardData.today[0].time}</p>
+    <section className="panel">
+      <div className="pageHeader">
+        <h2>🏢 HF CEO Dashboard</h2>
+        <p className="empty">
+          Volledig overzicht van je bedrijf in realtime
+        </p>
+      </div>
+
+      <div className="crmLayout">
+        {/* LEFT */}
+        <div className="customerList">
+          <h3>📊 KPI</h3>
+
+          <div className="noteItem">
+            💰 €{totalRevenue.toFixed(2)}
+          </div>
+
+          <div className="noteItem">
+            👤 {customers.length} klanten
+          </div>
+
+          <div className="noteItem">
+            📂 {projects.length} projecten
+          </div>
+
+          <div className="noteItem">
+            🧾 {invoices.length} facturen
+          </div>
         </div>
 
-        <div className="stat green">
-          <span>👥 Klanten</span>
-          <h2>{dashboardData.customers}</h2>
-          <p>2 nieuwe deze week</p>
+        {/* RIGHT AI */}
+        <div className="customerDetail">
+          <h3>🧠 CEO AI Analyse</h3>
+
+          <div className="aiCustomerNote">
+            <h4>📌 Status</h4>
+            <p>{getStatus()}</p>
+          </div>
+
+          <div className="aiCustomerNote">
+            <h4>🎯 Focus vandaag</h4>
+            <p>{getFocus()}</p>
+          </div>
+
+          <div className="aiCustomerNote">
+            <h4>🏆 Beste klant</h4>
+            <p>{getBestCustomer()}</p>
+          </div>
+
+          <div className="aiCustomerNote">
+            <h4>🚀 AI advies</h4>
+            <p>
+              Dit dashboard helpt je beslissen waar je vandaag geld kunt verdienen.
+            </p>
+          </div>
         </div>
-
-        <div className="stat orange">
-          <span>📋 Offertes</span>
-          <h2>{dashboardData.quotesOpen}</h2>
-          <p>Openstaand</p>
-        </div>
-
-        <div className="stat purple">
-          <span>🧾 Facturen</span>
-          <h2>{dashboardData.invoicesOpen}</h2>
-          <p>Openstaand</p>
-        </div>
-      </section>
-
-      <section className="grid">
-        <div className="panel">
-          <h3>📅 Agenda vandaag</h3>
-
-          {dashboardData.today.map((job) => (
-            <div className="listItem" key={job.time}>
-              <strong>{job.time} - {job.title}</strong>
-              <span>{job.customer}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="panel">
-          <h3>⚠️ Prioriteiten</h3>
-
-          {dashboardData.alerts.map((alert) => (
-            <div className="listItem" key={alert.title}>
-              <strong>{alert.title}</strong>
-              <span>{alert.description}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="panel ai">
-          <h3>🤖 HF AI Assistent</h3>
-          <p>
-            Goedemorgen Christian. Vandaag heb je {dashboardData.jobsToday} klussen.
-            Neem kit, pvc-lijm en een 32 mm bocht mee voor de eerste afspraak.
-          </p>
-          <button>Maak dagplanning</button>
-        </div>
-
-        <div className="panel money">
-          <h3>💰 Omzet deze maand</h3>
-          <h2>€ {dashboardData.revenue}</h2>
-          <p>Doel deze maand: € 5.000</p>
-        </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
 

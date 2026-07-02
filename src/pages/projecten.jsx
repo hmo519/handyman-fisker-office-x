@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-function Planning() {
-  const [projects] = useState(() => {
+function Projecten() {
+  const [projects, setProjects] = useState(() => {
     const saved = localStorage.getItem("hf-projects");
     return saved ? JSON.parse(saved) : [];
   });
@@ -11,198 +11,171 @@ function Planning() {
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [planning, setPlanning] = useState(() => {
-    const saved = localStorage.getItem("hf-planning");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [selectedProject, setSelectedProject] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-
-  const [workMode, setWorkMode] = useState(false);
+  const [title, setTitle] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState("");
 
   useEffect(() => {
-    localStorage.setItem("hf-planning", JSON.stringify(planning));
-  }, [planning]);
+    localStorage.setItem("hf-projects", JSON.stringify(projects));
+  }, [projects]);
 
-  function addPlanning() {
-    if (!selectedProject || !date || !time) return;
+  function addProject() {
+    if (!title || !selectedCustomer) return;
 
-    const newItem = {
-      id: `PLN-${Date.now()}`,
-      projectId: selectedProject,
-      date,
-      time,
+    const newProject = {
+      id: `PROJ-${Date.now()}`,
+      title,
+      customerId: selectedCustomer,
+      status: "Nieuw",
+      tasks: [],
     };
 
-    setPlanning([...planning, newItem]);
+    setProjects([...projects, newProject]);
 
-    setSelectedProject("");
-    setDate("");
-    setTime("");
+    setTitle("");
   }
 
-  function getProject(id) {
-    return projects.find((p) => p.id === id);
+  function addTask(projectId, taskText) {
+    if (!taskText) return;
+
+    const updated = projects.map((p) => {
+      if (p.id !== projectId) return p;
+
+      return {
+        ...p,
+        tasks: [...(p.tasks || []), taskText],
+      };
+    });
+
+    setProjects(updated);
   }
 
-  function getCustomer(customerId) {
-    return customers.find((c) => c.id === customerId);
+  function getCustomerName(id) {
+    const c = customers.find((c) => c.id === id);
+    return c ? c.name : "Onbekend";
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  // 🧠 AI ANALYSE FUNCTIES
+  function getProjectInsight(project) {
+    if (!project.tasks || project.tasks.length === 0) {
+      return "⚠️ Geen taken → project ligt stil";
+    }
 
-  const todayRoute = planning
-    .filter((p) => p.date === today)
-    .sort((a, b) => a.time.localeCompare(b.time));
+    if (project.tasks.length < 3) {
+      return "📌 Weinig werk → uitbreiden mogelijk";
+    }
+
+    if (project.status === "Klaar") {
+      return "💰 Klaar voor facturatie";
+    }
+
+    return "🚀 Actief project";
+  }
+
+  function getPriority(project) {
+    if (!project.tasks || project.tasks.length === 0) {
+      return "⚠️ DIRECT ACTIE NODIG";
+    }
+
+    if (project.status === "Nieuw") {
+      return "📌 Start werk";
+    }
+
+    if (project.status === "Bezig") {
+      return "🚀 Ga verder met uitvoering";
+    }
+
+    return "✅ Afgerond";
+  }
 
   return (
     <section className="panel">
       <div className="pageHeader">
-        <h2>🚀 Werkdag Cockpit</h2>
-        <p className="empty">Alles wat je vandaag moet doen in één scherm</p>
+        <h2>🧠 HF Project AI Brain</h2>
+        <p className="empty">
+          Elk project krijgt nu slimme AI analyse
+        </p>
       </div>
 
-      {/* INPUT */}
+      {/* CREATE PROJECT */}
       <div className="customerForm">
+        <input
+          placeholder="Project naam"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+
         <select
-          value={selectedProject}
-          onChange={(e) => setSelectedProject(e.target.value)}
+          value={selectedCustomer}
+          onChange={(e) => setSelectedCustomer(e.target.value)}
         >
-          <option value="">-- Kies project --</option>
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.title}
+          <option value="">Selecteer klant</option>
+          {customers.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
             </option>
           ))}
         </select>
 
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
-
-        <input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-        />
-
-        <button onClick={addPlanning}>➕ Inplannen</button>
+        <button onClick={addProject}>➕ Project toevoegen</button>
       </div>
 
-      {/* START DAG KNOP */}
-      {todayRoute.length > 0 && (
-        <button
-          onClick={() => setWorkMode(!workMode)}
-          style={{
-            marginTop: "20px",
-            padding: "14px 18px",
-            background: workMode ? "#ef4444" : "#2563eb",
-            color: "white",
-            border: "none",
-            borderRadius: "12px",
-            fontWeight: "bold",
-            cursor: "pointer",
-          }}
-        >
-          🚀 {workMode ? "Stop werkdag" : "Start werkdag"}
-        </button>
-      )}
-
       <div className="crmLayout">
-        {/* ROUTE */}
+        {/* LIST */}
         <div className="customerList">
-          <h3>📍 Werkdag route</h3>
+          {projects.map((p) => (
+            <div key={p.id} className="customerCard">
+              <strong>{p.title}</strong>
 
-          {todayRoute.length === 0 ? (
-            <p className="empty">Geen afspraken vandaag</p>
-          ) : (
-            todayRoute.map((item, index) => {
-              const project = getProject(item.projectId);
-              const customer = project
-                ? getCustomer(project.customerId)
-                : null;
+              <p>👤 {getCustomerName(p.customerId)}</p>
+              <p>📊 {p.status}</p>
 
-              const isActive = workMode && index === 0;
-
-              return (
-                <div
-                  key={item.id}
-                  className="customerCard"
-                  style={{
-                    border: isActive ? "2px solid #22c55e" : "",
-                    transform: isActive ? "scale(1.02)" : "scale(1)",
-                    transition: "0.2s",
-                  }}
-                >
-                  <div>
-                    <strong>
-                      {isActive ? "👉 NU: " : ""}
-                      {item.time}
-                    </strong>
-
-                    <p>{project?.title}</p>
-
-                    <p style={{ fontSize: "12px", opacity: 0.7 }}>
-                      👤 {customer?.name}
-                    </p>
-
-                    <p style={{ fontSize: "12px", opacity: 0.7 }}>
-                      📍 {customer?.address || customer?.city}
-                    </p>
-                  </div>
-
-                  {workMode && isActive && (
-                    <div className="aiCustomerNote">
-                      <p>⚡ Huidige klus actief</p>
-                      <p>Vergeet materiaal check niet</p>
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
+              <p style={{ fontSize: "12px", opacity: 0.7 }}>
+                {getProjectInsight(p)}
+              </p>
+            </div>
+          ))}
         </div>
 
-        {/* OVERVIEW */}
+        {/* DETAIL AI */}
         <div className="customerDetail">
-          <h3>📆 Overzicht</h3>
+          {projects.map((p) => (
+            <div key={p.id} className="noteItem">
+              <h4>📌 {p.title}</h4>
 
-          {planning.length === 0 ? (
-            <p className="empty">Nog geen planning</p>
-          ) : (
-            planning.map((item) => {
-              const project = getProject(item.projectId);
-              const customer = project
-                ? getCustomer(project.customerId)
-                : null;
+              <p>👤 {getCustomerName(p.customerId)}</p>
 
-              return (
-                <div key={item.id} className="noteItem">
-                  <strong>
-                    {item.date} • {item.time}
-                  </strong>
+              <div className="aiCustomerNote">
+                <h4>🧠 AI Prioriteit</h4>
+                <p>{getPriority(p)}</p>
+              </div>
 
-                  <p>{project?.title}</p>
+              <div className="aiCustomerNote">
+                <h4>📊 AI Analyse</h4>
+                <p>{getProjectInsight(p)}</p>
+              </div>
 
-                  <p style={{ fontSize: "12px", opacity: 0.7 }}>
-                    👤 {customer?.name}
-                  </p>
+              {/* TASK INPUT */}
+              <input
+                placeholder="Nieuwe taak toevoegen"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    addTask(p.id, e.target.value);
+                    e.target.value = "";
+                  }
+                }}
+              />
 
-                  <p style={{ fontSize: "12px", opacity: 0.7 }}>
-                    📍 {customer?.address || customer?.city}
-                  </p>
-                </div>
-              );
-            })
-          )}
+              <ul>
+                {(p.tasks || []).map((t, i) => (
+                  <li key={i}>✔ {t}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-export default Planning;
+export default Projecten;

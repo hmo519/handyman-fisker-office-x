@@ -1,262 +1,118 @@
 import { useEffect, useState } from "react";
-import customersData from "../data/customersdata";
 
 function Klanten() {
   const [customers, setCustomers] = useState(() => {
-    const savedCustomers = localStorage.getItem("hf-customers");
-    return savedCustomers ? JSON.parse(savedCustomers) : customersData;
+    const saved = localStorage.getItem("hf-customers");
+    return saved ? JSON.parse(saved) : [];
   });
 
-  const [form, setForm] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    city: "",
+  const [projects] = useState(() => {
+    const saved = localStorage.getItem("hf-projects");
+    return saved ? JSON.parse(saved) : [];
   });
 
-  const [editingId, setEditingId] = useState(null);
-  const [search, setSearch] = useState("");
+  const [invoices] = useState(() => {
+    const saved = localStorage.getItem("hf-invoices");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [noteText, setNoteText] = useState("");
-  const [projectTitle, setProjectTitle] = useState("");
+  const [name, setName] = useState("");
+  const [city, setCity] = useState("");
 
   useEffect(() => {
     localStorage.setItem("hf-customers", JSON.stringify(customers));
   }, [customers]);
 
-  function handleChange(event) {
-    setForm({ ...form, [event.target.name]: event.target.value });
-  }
-
-  function resetForm() {
-    setForm({ name: "", phone: "", email: "", city: "" });
-    setEditingId(null);
-  }
-
-  function saveCustomer() {
-    if (!form.name.trim()) return;
-
-    if (editingId) {
-      const updatedCustomers = customers.map((customer) =>
-        customer.id === editingId ? { ...customer, ...form } : customer
-      );
-
-      setCustomers(updatedCustomers);
-      setSelectedCustomer(updatedCustomers.find((c) => c.id === editingId));
-      resetForm();
-      return;
-    }
+  function addCustomer() {
+    if (!name) return;
 
     const newCustomer = {
-      id: `HF-${String(customers.length + 1).padStart(4, "0")}`,
-      name: form.name,
-      phone: form.phone,
-      email: form.email,
-      city: form.city,
-      status: "Nieuwe klant",
-      notes: [],
-      projects: [],
+      id: `CUST-${Date.now()}`,
+      name,
+      city,
     };
 
     setCustomers([...customers, newCustomer]);
-    setSelectedCustomer(newCustomer);
-    resetForm();
+
+    setName("");
+    setCity("");
   }
 
-  function editCustomer(customer) {
-    setEditingId(customer.id);
-    setForm({
-      name: customer.name,
-      phone: customer.phone,
-      email: customer.email,
-      city: customer.city,
-    });
+  function getProjects(customerId) {
+    return projects.filter((p) => p.customerId === customerId);
   }
 
-  function deleteCustomer(id) {
-    if (!window.confirm("Weet je zeker dat je deze klant wilt verwijderen?")) return;
-
-    const updatedCustomers = customers.filter((customer) => customer.id !== id);
-    setCustomers(updatedCustomers);
-
-    if (selectedCustomer?.id === id) setSelectedCustomer(null);
-    if (editingId === id) resetForm();
+  function getInvoices(projectId) {
+    return invoices.filter((i) => i.projectId === projectId);
   }
-
-  function addNote() {
-    if (!selectedCustomer || !noteText.trim()) return;
-
-    const newNote = {
-      id: Date.now(),
-      text: noteText,
-      date: new Date().toLocaleDateString("nl-NL"),
-    };
-
-    const updatedCustomers = customers.map((customer) =>
-      customer.id === selectedCustomer.id
-        ? { ...customer, notes: [...(customer.notes || []), newNote] }
-        : customer
-    );
-
-    setCustomers(updatedCustomers);
-    setSelectedCustomer(updatedCustomers.find((c) => c.id === selectedCustomer.id));
-    setNoteText("");
-  }
-
-  function addProject() {
-    if (!selectedCustomer || !projectTitle.trim()) return;
-
-    const newProject = {
-      id: `PRJ-${Date.now()}`,
-      title: projectTitle,
-      status: "Nieuw project",
-      createdAt: new Date().toLocaleDateString("nl-NL"),
-    };
-
-    const updatedCustomers = customers.map((customer) =>
-      customer.id === selectedCustomer.id
-        ? { ...customer, projects: [...(customer.projects || []), newProject] }
-        : customer
-    );
-
-    setCustomers(updatedCustomers);
-    setSelectedCustomer(updatedCustomers.find((c) => c.id === selectedCustomer.id));
-    setProjectTitle("");
-  }
-
-  const filteredCustomers = customers.filter((customer) => {
-    const searchText = search.toLowerCase();
-
-    return (
-      customer.id.toLowerCase().includes(searchText) ||
-      customer.name.toLowerCase().includes(searchText) ||
-      customer.phone.toLowerCase().includes(searchText) ||
-      customer.email.toLowerCase().includes(searchText) ||
-      customer.city.toLowerCase().includes(searchText)
-    );
-  });
 
   return (
     <section className="panel">
       <div className="pageHeader">
-        <div>
-          <h2>👥 Klantenbeheer</h2>
-          <p className="empty">Klanten, notities en projecten beheren.</p>
-        </div>
+        <h2>👤 CRM Flow System</h2>
+        <p className="empty">
+          Klanten → Projecten → Facturen gekoppeld
+        </p>
       </div>
 
-      <input
-        className="searchInput"
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder="🔍 Zoek klant..."
-      />
-
+      {/* ADD CUSTOMER */}
       <div className="customerForm">
-        <input name="name" value={form.name} onChange={handleChange} placeholder="Naam" />
-        <input name="phone" value={form.phone} onChange={handleChange} placeholder="Telefoon" />
-        <input name="email" value={form.email} onChange={handleChange} placeholder="Email" />
-        <input name="city" value={form.city} onChange={handleChange} placeholder="Plaats" />
+        <input
+          placeholder="Naam"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
 
-        <button onClick={saveCustomer}>
-          {editingId ? "💾 Wijzigingen opslaan" : "➕ Klant toevoegen"}
-        </button>
+        <input
+          placeholder="Stad"
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+        />
 
-        {editingId && <button onClick={resetForm}>❌ Annuleren</button>}
+        <button onClick={addCustomer}>➕ Klant toevoegen</button>
       </div>
 
       <div className="crmLayout">
+        {/* LIST */}
         <div className="customerList">
-          {filteredCustomers.map((customer) => (
+          {customers.map((c) => (
             <div
-              className={selectedCustomer?.id === customer.id ? "customerCard selected" : "customerCard"}
-              key={customer.id}
-              onClick={() => setSelectedCustomer(customer)}
+              key={c.id}
+              className="customerCard"
+              onClick={() => setSelectedCustomer(c)}
             >
-              <div>
-                <strong>{customer.name}</strong>
-                <p>{customer.id} • {customer.city}</p>
-              </div>
-              <span className="statusBadge">{customer.status}</span>
+              <strong>{c.name}</strong>
+              <p>{c.city}</p>
             </div>
           ))}
         </div>
 
+        {/* DETAIL */}
         <div className="customerDetail">
           {selectedCustomer ? (
             <>
-              <div className="detailHeader">
-                <div>
-                  <h3>👤 {selectedCustomer.name}</h3>
-                  <p className="empty">{selectedCustomer.id}</p>
+              <h3>👤 {selectedCustomer.name}</h3>
+
+              {/* PROJECTS */}
+              <h4>📂 Projecten</h4>
+              {getProjects(selectedCustomer.id).map((p) => (
+                <div key={p.id} className="noteItem">
+                  📌 {p.title}
+
+                  {/* INVOICES */}
+                  {getInvoices(p.id).map((i) => (
+                    <p key={i.id}>🧾 €{i.total}</p>
+                  ))}
                 </div>
-                <span className="statusBadge">{selectedCustomer.status}</span>
-              </div>
+              ))}
 
-              <div className="detailGrid">
-                <div><strong>📞 Telefoon</strong><p>{selectedCustomer.phone || "Niet ingevuld"}</p></div>
-                <div><strong>📧 Email</strong><p>{selectedCustomer.email || "Niet ingevuld"}</p></div>
-                <div><strong>📍 Plaats</strong><p>{selectedCustomer.city || "Niet ingevuld"}</p></div>
-                <div><strong>📂 Projecten</strong><p>{(selectedCustomer.projects || []).length}</p></div>
-              </div>
-
-              <div className="detailActions">
-                <a href={`tel:${selectedCustomer.phone}`}>📞 Bellen</a>
-                <a href={`mailto:${selectedCustomer.email}`}>📧 Mailen</a>
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedCustomer.city)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  📍 Route
-                </a>
-                <button onClick={() => editCustomer(selectedCustomer)}>✏️ Bewerken</button>
-                <button onClick={() => deleteCustomer(selectedCustomer.id)}>🗑️ Verwijderen</button>
-              </div>
-
-              <div className="projectBox">
-                <h4>📂 Projecten</h4>
-                <div className="noteInput">
-                  <input
-                    value={projectTitle}
-                    onChange={(event) => setProjectTitle(event.target.value)}
-                    placeholder="Nieuw project..."
-                  />
-                  <button onClick={addProject}>Project opslaan</button>
-                </div>
-
-                {(selectedCustomer.projects || []).map((project) => (
-                  <div className="projectItem" key={project.id}>
-                    <div>
-                      <strong>{project.title}</strong>
-                      <p>{project.id} • {project.createdAt}</p>
-                    </div>
-                    <span className="statusBadge">{project.status}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="noteBox">
-                <h4>📝 Notities</h4>
-                <div className="noteInput">
-                  <input
-                    value={noteText}
-                    onChange={(event) => setNoteText(event.target.value)}
-                    placeholder="Nieuwe notitie..."
-                  />
-                  <button onClick={addNote}>Opslaan</button>
-                </div>
-
-                {(selectedCustomer.notes || []).map((note) => (
-                  <div className="noteItem" key={note.id}>
-                    <strong>{note.date}</strong>
-                    <p>{note.text}</p>
-                  </div>
-                ))}
-              </div>
+              {getProjects(selectedCustomer.id).length === 0 && (
+                <p className="empty">Geen projecten</p>
+              )}
             </>
           ) : (
-            <p className="empty">Klik links op een klant om het klantdossier te openen.</p>
+            <p className="empty">Selecteer een klant</p>
           )}
         </div>
       </div>
