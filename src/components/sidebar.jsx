@@ -10,6 +10,8 @@ const menu = [
   { icon: "📅", label: "Planning" },
   { icon: "📂", label: "Projecten" },
   { icon: "📄", label: "Offertes" },
+
+  { icon: "💰", label: "Financieel Centrum" },
   { icon: "🧾", label: "Facturen" },
 
   { icon: "🤖", label: "AI Assistent" },
@@ -69,9 +71,7 @@ function Sidebar({ activePage, setActivePage }) {
             <strong>Christian</strong>
             <span>Eigenaar</span>
             <br />
-            <small style={{ color: "#22c55e" }}>
-              ● HF Core Online
-            </small>
+            <small style={{ color: "#22c55e" }}>● HF Core Online</small>
           </div>
         </div>
       )}

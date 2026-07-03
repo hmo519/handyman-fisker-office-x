@@ -1,11 +1,13 @@
 import { useAppState } from "../context/AppState";
 import AICeoWidget from "../components/dashboard/AICeoWidget";
+import AICeoLiveWidget from "../components/dashboard/AICeoLiveWidget";
+import AIPrioritiesWidget from "../components/dashboard/AIPrioritiesWidget";
 import KPIGrid from "../components/dashboard/KPIGrid";
 import BusinessHealthWidget from "../components/dashboard/BusinessHealthWidget";
 import QuickActionsWidget from "../components/dashboard/QuickActionsWidget";
 import RevenueChartWidget from "../components/dashboard/RevenueChartWidget";
 
-function Dashboard() {
+function Dashboard({ onNavigate }) {
   const { dashboard, notifications, runAI, refresh } = useAppState();
 
   const data = dashboard.data;
@@ -18,7 +20,7 @@ function Dashboard() {
       <div className="pageHeader">
         <div>
           <h2>🏢 HF COMMAND CENTER 3.0</h2>
-          <p className="empty">Professionele AI cockpit voor je bedrijf</p>
+          <p className="empty">Professionele AI Cockpit</p>
         </div>
       </div>
 
@@ -30,6 +32,10 @@ function Dashboard() {
         onRunAI={runAI}
       />
 
+      <AICeoLiveWidget />
+
+      <AIPrioritiesWidget />
+
       <KPIGrid data={data} forecast={forecast} />
 
       <div className="crmLayout">
@@ -39,7 +45,7 @@ function Dashboard() {
             data={data}
           />
 
-          <QuickActionsWidget />
+          <QuickActionsWidget onNavigate={onNavigate} />
 
           <h3>📅 Planning vandaag</h3>
 

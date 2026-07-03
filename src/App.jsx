@@ -9,6 +9,7 @@ import Planning from "./pages/planning";
 import Projecten from "./pages/projecten";
 import Offertes from "./pages/offertes";
 import Facturen from "./pages/facturen";
+import FinancieelCentrum from "./pages/financieelcentrum";
 import Instellingen from "./pages/instellingen";
 
 import Notifications from "./pages/notifications";
@@ -31,7 +32,7 @@ function App() {
   function renderPage() {
     switch (activePage) {
       case "Dashboard":
-        return <Dashboard />;
+        return <Dashboard onNavigate={setActivePage} />;
       case "Meldingen":
         return <Notifications />;
       case "Klanten":
@@ -44,6 +45,8 @@ function App() {
         return <Offertes />;
       case "Facturen":
         return <Facturen />;
+      case "Financieel Centrum":
+        return <FinancieelCentrum />;
       case "Instellingen":
         return <Instellingen />;
       case "AI Assistent":
