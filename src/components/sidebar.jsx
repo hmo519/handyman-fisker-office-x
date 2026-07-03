@@ -12,6 +12,7 @@ const menu = [
   { icon: "📄", label: "Offertes" },
 
   { icon: "💰", label: "Financieel Centrum" },
+  { icon: "🧾", label: "BTW Centrum" },
   { icon: "🧾", label: "Facturen" },
 
   { icon: "🤖", label: "AI Assistent" },
