@@ -911,3 +911,31 @@ button {
   font-size: 13px;
 }
 
+.customerCard{
+    padding:16px;
+    border-radius:12px;
+    cursor:pointer;
+    margin-bottom:12px;
+    background:#0f172a;
+    border:1px solid #1e293b;
+    transition:.2s;
+}
+
+.customerCard:hover{
+    border-color:var(--hf-accent);
+}
+
+.customerCard.active{
+    border:2px solid var(--hf-accent);
+}
+
+.hfCardActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.hfCardHeader {
+  gap: 16px;
+}

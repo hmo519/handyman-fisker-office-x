@@ -1,120 +1,168 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import CustomerDetail from "../components/crm/CustomerDetail";
+
+import {
+  getAllCustomers,
+  addCustomer,
+  updateCustomer,
+  deleteCustomer,
+  addCustomerNote,
+  addCustomerTask,
+  toggleCustomerTask,
+  addCustomerContact,
+} from "../services/customerService";
 
 function Klanten() {
-  const [customers, setCustomers] = useState(() => {
-    const saved = localStorage.getItem("hf-customers");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [customers, setCustomers] = useState(getAllCustomers());
+  const [selectedCustomerId, setSelectedCustomerId] = useState(
+    customers.length ? customers[0].id : null
+  );
 
-  const [projects] = useState(() => {
-    const saved = localStorage.getItem("hf-projects");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [invoices] = useState(() => {
-    const saved = localStorage.getItem("hf-invoices");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [name, setName] = useState("");
   const [city, setCity] = useState("");
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
 
-  useEffect(() => {
-    localStorage.setItem("hf-customers", JSON.stringify(customers));
-  }, [customers]);
+  const selectedCustomer = customers.find(
+    (customer) => customer.id === selectedCustomerId
+  );
 
-  function addCustomer() {
-    if (!name) return;
+  function refreshCustomers() {
+    setCustomers(getAllCustomers());
+  }
 
-    const newCustomer = {
-      id: `CUST-${Date.now()}`,
+  function handleAddCustomer() {
+    if (!name.trim()) return;
+
+    const updated = addCustomer({
       name,
       city,
-    };
+      address,
+      phone,
+      email,
+      status: "Lead",
+    });
 
-    setCustomers([...customers, newCustomer]);
+    setCustomers(updated);
+    setSelectedCustomerId(updated[updated.length - 1].id);
 
     setName("");
     setCity("");
+    setAddress("");
+    setPhone("");
+    setEmail("");
   }
 
-  function getProjects(customerId) {
-    return projects.filter((p) => p.customerId === customerId);
+  function handleUpdateCustomer(customerId, updates) {
+    const updated = updateCustomer(customerId, updates);
+    setCustomers(updated);
   }
 
-  function getInvoices(projectId) {
-    return invoices.filter((i) => i.projectId === projectId);
+  function handleDeleteCustomer(customerId) {
+    const updated = deleteCustomer(customerId);
+    setCustomers(updated);
+
+    if (updated.length > 0) {
+      setSelectedCustomerId(updated[0].id);
+    } else {
+      setSelectedCustomerId(null);
+    }
+  }
+
+  function handleAddNote(customerId, text) {
+    addCustomerNote(customerId, text);
+    refreshCustomers();
+  }
+
+  function handleAddTask(customerId, text) {
+    addCustomerTask(customerId, text);
+    refreshCustomers();
+  }
+
+  function handleToggleTask(customerId, taskId) {
+    toggleCustomerTask(customerId, taskId);
+    refreshCustomers();
+  }
+
+  function handleAddContact(customerId, contactData) {
+    addCustomerContact(customerId, contactData);
+    refreshCustomers();
   }
 
   return (
     <section className="panel">
       <div className="pageHeader">
-        <h2>👤 CRM Flow System</h2>
-        <p className="empty">
-          Klanten → Projecten → Facturen gekoppeld
-        </p>
+        <div>
+          <h2>👥 CRM Suite Pro</h2>
+          <p className="empty">360° klantbeheer</p>
+        </div>
       </div>
 
-      {/* ADD CUSTOMER */}
       <div className="customerForm">
         <input
-          placeholder="Naam"
+          placeholder="Klantnaam"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
 
         <input
-          placeholder="Stad"
+          placeholder="Adres"
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+        />
+
+        <input
+          placeholder="Plaats"
           value={city}
           onChange={(e) => setCity(e.target.value)}
         />
 
-        <button onClick={addCustomer}>➕ Klant toevoegen</button>
+        <input
+          placeholder="Telefoon"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+        />
+
+        <input
+          placeholder="E-mail"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <button onClick={handleAddCustomer}>➕ Klant toevoegen</button>
       </div>
 
       <div className="crmLayout">
-        {/* LIST */}
         <div className="customerList">
-          {customers.map((c) => (
-            <div
-              key={c.id}
-              className="customerCard"
-              onClick={() => setSelectedCustomer(c)}
-            >
-              <strong>{c.name}</strong>
-              <p>{c.city}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* DETAIL */}
-        <div className="customerDetail">
-          {selectedCustomer ? (
-            <>
-              <h3>👤 {selectedCustomer.name}</h3>
-
-              {/* PROJECTS */}
-              <h4>📂 Projecten</h4>
-              {getProjects(selectedCustomer.id).map((p) => (
-                <div key={p.id} className="noteItem">
-                  📌 {p.title}
-
-                  {/* INVOICES */}
-                  {getInvoices(p.id).map((i) => (
-                    <p key={i.id}>🧾 €{i.total}</p>
-                  ))}
-                </div>
-              ))}
-
-              {getProjects(selectedCustomer.id).length === 0 && (
-                <p className="empty">Geen projecten</p>
-              )}
-            </>
+          {customers.length === 0 ? (
+            <p className="empty">Nog geen klanten aanwezig.</p>
           ) : (
-            <p className="empty">Selecteer een klant</p>
+            customers.map((customer) => (
+              <div
+                key={customer.id}
+                className={`customerCard ${
+                  selectedCustomerId === customer.id ? "active" : ""
+                }`}
+                onClick={() => setSelectedCustomerId(customer.id)}
+              >
+                <strong>{customer.name}</strong>
+                <p>{customer.city}</p>
+                <small>{customer.status}</small>
+              </div>
+            ))
           )}
         </div>
+
+        <CustomerDetail
+          customer={selectedCustomer}
+          onUpdateCustomer={handleUpdateCustomer}
+          onDeleteCustomer={handleDeleteCustomer}
+          onAddNote={handleAddNote}
+          onAddTask={handleAddTask}
+          onToggleTask={handleToggleTask}
+          onAddContact={handleAddContact}
+        />
       </div>
     </section>
   );
